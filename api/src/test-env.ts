@@ -1,0 +1,5 @@
+process.env.ELMSWORTH_STORE = 'memory'
+process.env.ADMIN_EMAIL = 'ada@studio.test'
+process.env.ADMIN_PASSWORD = 'studio-admin-test'
+process.env.VIEWER_EMAIL = 'lee@studio.test'
+process.env.VIEWER_PASSWORD = 'studio-viewer-test'

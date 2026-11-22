@@ -1,0 +1,248 @@
+﻿.cabinet-pill {
+  display: inline-flex;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 15px;
+  background: #ddebd7;
+  color: #034d61;
+}
+
+.cabinet-pill.is-contacted {
+  background: #58b198;
+  color: #fff;
+}
+
+.cabinet-pill.is-closed {
+  background: #242626;
+  color: #fff;
+}
+
+.cabinet-row-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.cabinet-row-actions button,
+.cabinet-delete,
+.cabinet-status button,
+.cabinet-icon-btn {
+  border: 0;
+  border-radius: 8px;
+  background: #ddebd7;
+  color: #034d61;
+  font: inherit;
+  font-size: 16px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition:
+    background-color 0.38s ease,
+    color 0.38s ease;
+}
+
+.cabinet-row-actions button:hover,
+.cabinet-status button:hover,
+.cabinet-icon-btn:hover {
+  background: #58b198;
+  color: #fff;
+}
+
+.cabinet-delete {
+  background: #034d61;
+  color: #fff;
+}
+
+.cabinet-delete:hover {
+  background: #242626;
+}
+
+.cabinet-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+}
+
+.cabinet-drawer-shade {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: #034d61b3;
+  cursor: pointer;
+  animation: cabinet-shade 0.45s ease-out;
+}
+
+.cabinet-drawer-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: min(440px, 100%);
+  height: 100%;
+  background: #fff;
+  padding: 28px;
+  overflow: auto;
+  animation: cabinet-in 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes cabinet-shade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes cabinet-in {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+.cabinet-drawer.is-leaving .cabinet-drawer-shade {
+  animation: cabinet-shade-out 0.45s ease-out forwards;
+}
+
+.cabinet-drawer.is-leaving .cabinet-drawer-panel {
+  animation: cabinet-out 0.52s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes cabinet-shade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes cabinet-out {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.cabinet-drawer-panel header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cabinet-drawer-panel h2 {
+  margin: 0;
+  color: #034d61;
+  font-size: 32px;
+}
+
+.cabinet-drawer-meta {
+  margin: 8px 0 20px;
+  color: #2d768a;
+}
+
+.cabinet-drawer-panel dl {
+  margin: 0 0 20px;
+}
+
+.cabinet-drawer-panel dt {
+  color: #2d768a;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+}
+
+.cabinet-drawer-panel dd {
+  margin: 4px 0 14px;
+  font-size: 18px;
+}
+
+.cabinet-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.cabinet-status button.is-current {
+  background: #58b198;
+  color: #fff;
+}
+
+.cabinet-confirm {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.cabinet-confirm-shade {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: #034d61b3;
+  cursor: pointer;
+}
+
+.cabinet-confirm-panel {
+  position: relative;
+  width: min(420px, 100%);
+  background: #fff;
+  border-radius: 14px;
+  padding: 28px;
+  animation: cabinet-pop 0.38s ease;
+}
+
+@keyframes cabinet-pop {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+}
+
+.cabinet-confirm-panel h2 {
+  margin: 0 0 8px;
+  color: #034d61;
+  font-size: 28px;
+}
+
+.cabinet-confirm-panel p {
+  margin: 0 0 20px;
+  font-size: 18px;
+}
+
+.cabinet-confirm-panel a {
+  color: #034d61;
+  text-decoration: none;
+}
+
+.cabinet-confirm-panel a:hover {
+  color: #58b198;
+}
+
+.cabinet-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.cabinet-confirm-actions button {
+  border: 0;
+  border-radius: 8px;
+  background: #ddebd7;
+  color: #034d61;
+  font: inherit;
+  font-size: 16px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition:
+    background-color 0.38s ease,
+    color 0.38s ease;
+}
+
+.cabinet-confirm-actions button:hover {
+  background: #58b198;
+  color: #fff;
+}
+
+.cabinet-confirm-actions .cabinet-delete {
+  background: #034d61;
+  color: #fff;
+}
+
+.cabinet-confirm-actions .cabinet-delete:hover {
+  background: #242626;
+  color: #fff;
+}
