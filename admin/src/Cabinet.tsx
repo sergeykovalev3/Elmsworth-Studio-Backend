@@ -157,7 +157,7 @@ export function Cabinet() {
             </button>
           </nav>
           <div className="cabinet-side-foot">
-            <a href="http://localhost:5173">
+            <a href={import.meta.env.VITE_SITE_URL ?? 'http://localhost:5173'}>
               <i className="ti ti-arrow-left" />
               Back to site
             </a>

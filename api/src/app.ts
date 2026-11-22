@@ -1,10 +1,12 @@
+import { readFile } from 'node:fs/promises'
+import { join } from 'node:path'
 import { Hono } from 'hono'
 import type { Context, Next } from 'hono'
 import { cors } from 'hono/cors'
 import { checkAccount } from './accounts.ts'
 import { createPost, deletePost, listPosts, updatePost } from './db/posts.ts'
 import { createProject, deleteProject, listProjects, updateProject } from './db/projects.ts'
-import { asFiles, asText, saveImage } from './uploads.ts'
+import { asFiles, asText, saveImage, uploadDirectory } from './uploads.ts'
 import { endSession, readSession, startSession } from './session.ts'
 import {
   createRequest,
@@ -25,6 +27,24 @@ app.use(
 )
 
 app.get('/api/health', (c) => c.json({ ok: true }))
+
+const uploadTypes = { jpg: 'image/jpeg', png: 'image/png', webp: 'image/webp' } as const
+
+app.get('/api/uploads/:name', async (c) => {
+  const name = c.req.param('name')
+  const extension = /^[a-f0-9-]{36}\.(jpg|png|webp)$/.exec(name)?.[1] as keyof typeof uploadTypes | undefined
+  if (!extension) return c.notFound()
+
+  const bytes = await readFile(join(uploadDirectory, name)).catch(() => null)
+  if (!bytes) return c.notFound()
+
+  const response = new Uint8Array(bytes)
+  return c.body(response, 200, {
+    'Content-Type': uploadTypes[extension],
+    'X-Content-Type-Options': 'nosniff',
+    'Cache-Control': 'public, max-age=31536000, immutable',
+  })
+})
 
 app.get('/api/session', (c) => {
   const session = readSession(c)

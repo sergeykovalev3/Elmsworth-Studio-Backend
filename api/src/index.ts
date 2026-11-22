@@ -1,7 +1,13 @@
+import { serveStatic } from '@hono/node-server/serve-static'
 import { serve } from '@hono/node-server'
 import { accounts } from './accounts.ts'
 import { app } from './app.ts'
 import { ensureSchema } from './db/index.ts'
+
+if (process.env.NODE_ENV === 'production') {
+  app.get('/assets/*', serveStatic({ root: './admin/dist' }))
+  app.get('/', serveStatic({ path: './admin/dist/index.html' }))
+}
 
 const port = Number(process.env.PORT ?? 3001)
 

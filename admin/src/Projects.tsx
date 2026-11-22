@@ -4,7 +4,7 @@ import { ProjectEditor, type ProjectRow } from './ProjectEditor'
 import './ProjectEditor.css'
 import './Projects.css'
 
-const site = 'http://localhost:5173'
+const site = import.meta.env.VITE_SITE_URL ?? 'http://localhost:5173'
 
 export function Projects({ canEdit, onLocked }: { canEdit: boolean; onLocked: () => void }) {
   const queryClient = useQueryClient()

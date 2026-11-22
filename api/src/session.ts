@@ -21,6 +21,7 @@ export function startSession(c: Context, session: Session) {
   sessions.set(token, session)
   setCookie(c, cookie, token, {
     httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
     sameSite: 'Lax',
     path: '/',
   })

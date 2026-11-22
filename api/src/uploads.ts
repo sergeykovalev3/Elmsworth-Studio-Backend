@@ -2,17 +2,17 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const dir =
+export const uploadDirectory =
   process.env.UPLOAD_DIR ??
   fileURLToPath(new URL('../../frontend/public/projects/', import.meta.url))
 
-mkdirSync(dir, { recursive: true })
+mkdirSync(uploadDirectory, { recursive: true })
 
 export async function saveImage(file: File) {
   const ext = file.type === 'image/png' ? '.png' : file.type === 'image/webp' ? '.webp' : '.jpg'
   const name = `${crypto.randomUUID()}${ext}`
-  writeFileSync(join(dir, name), Buffer.from(await file.arrayBuffer()))
-  return `/projects/${name}`
+  writeFileSync(join(uploadDirectory, name), Buffer.from(await file.arrayBuffer()))
+  return `/api/uploads/${name}`
 }
 
 export function asFiles(value: unknown): File[] {

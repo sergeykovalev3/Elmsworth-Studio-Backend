@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { RichText } from './ProjectEditor'
 import './ProjectEditor.css'
 
-const site = 'http://localhost:5173'
+const site = import.meta.env.VITE_SITE_URL ?? 'http://localhost:5173'
 
 export type PostRow = {
   id: string
