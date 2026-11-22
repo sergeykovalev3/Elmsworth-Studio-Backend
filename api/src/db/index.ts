@@ -44,7 +44,8 @@ export async function ensureSchema() {
   `
   await sql`
     ALTER TABLE requests
-    ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'new'
+    ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'new',
+    ADD COLUMN IF NOT EXISTS is_demo boolean NOT NULL DEFAULT false
   `
   await sql`
     CREATE TABLE IF NOT EXISTS projects (

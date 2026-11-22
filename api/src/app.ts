@@ -256,7 +256,10 @@ app.delete('/api/projects/:id', async (c) => {
 })
 
 app.get('/api/requests', async (c) => {
-  return c.json(await listRequests())
+  const session = readSession(c)
+  if (!session) return c.json({ error: 'unauthorized' }, 401)
+  c.header('Cache-Control', 'private, no-store')
+  return c.json(await listRequests(session.role === 'viewer'))
 })
 
 app.post('/api/requests', async (c) => {

@@ -1,4 +1,4 @@
-import { desc, eq } from 'drizzle-orm'
+import { and, desc, eq } from 'drizzle-orm'
 import { db } from './index.ts'
 import { requests } from './schema.ts'
 
@@ -28,11 +28,15 @@ function toIso(value: Date | string) {
   return value instanceof Date ? value.toISOString() : value
 }
 
-export async function listRequests(): Promise<RequestRow[]> {
+export async function listRequests(isDemo: boolean): Promise<RequestRow[]> {
   if (!db) {
-    return [...memory].reverse()
+    return isDemo ? [] : [...memory].reverse()
   }
-  const rows = await db.select().from(requests).orderBy(desc(requests.createdAt))
+  const rows = await db
+    .select()
+    .from(requests)
+    .where(eq(requests.isDemo, isDemo))
+    .orderBy(desc(requests.createdAt))
   return rows.map((row) => ({
     id: row.id,
     name: row.name,
@@ -89,7 +93,7 @@ export async function updateRequestStatus(
   const [row] = await db
     .update(requests)
     .set({ status })
-    .where(eq(requests.id, id))
+    .where(and(eq(requests.id, id), eq(requests.isDemo, false)))
     .returning()
   if (!row) return null
   return {
@@ -110,6 +114,9 @@ export async function deleteRequest(id: string): Promise<boolean> {
     memory.splice(index, 1)
     return true
   }
-  const removed = await db.delete(requests).where(eq(requests.id, id)).returning()
+  const removed = await db
+    .delete(requests)
+    .where(and(eq(requests.id, id), eq(requests.isDemo, false)))
+    .returning()
   return removed.length > 0
 }

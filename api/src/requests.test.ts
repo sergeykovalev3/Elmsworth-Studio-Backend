@@ -58,13 +58,14 @@ test('a request needs a name, an email, and a message', async () => {
   assert.deepEqual(await listed.json(), [])
 })
 
-test('a saved request shows up for the cabinet', async () => {
+test('a submitted request is visible only to admins', async () => {
   const created = await app.request(
     '/api/requests',
     json({
       name: 'Ada Voss',
       email: 'ada@studio.test',
       phone: '5715550148',
+      isDemo: true,
       message: 'Property: 410 Elm Street',
     }),
   )
@@ -83,6 +84,12 @@ test('a saved request shows up for the cabinet', async () => {
   const rows = await listed.json()
   assert.equal(rows.length, 1)
   assert.equal(rows[0].id, row.id)
+
+  const demo = await app.request('/api/requests', {
+    headers: { cookie: await login(viewer) },
+  })
+  assert.equal(demo.status, 200)
+  assert.deepEqual(await demo.json(), [])
 })
 
 test('status changes stay inside the known set and need an admin', async () => {

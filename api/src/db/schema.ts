@@ -7,6 +7,7 @@ export const requests = pgTable('requests', {
   phone: text('phone'),
   message: text('message').notNull(),
   status: text('status').notNull().default('new'),
+  isDemo: boolean('is_demo').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .defaultNow(),
