@@ -151,3 +151,27 @@ test('projects and notes cannot be changed without a session', async () => {
   })
   assert.equal(post.status, 401)
 })
+
+test('viewer cannot send any cabinet mutation', async () => {
+  const cookie = await login(viewer)
+  for (const resource of ['requests', 'projects', 'posts']) {
+    const created = await app.request(`/api/${resource}`, json({}, cookie))
+    assert.equal(created.status, 403)
+    for (const method of ['PATCH', 'DELETE']) {
+      const response = await app.request(`/api/${resource}/example`, {
+        method,
+        headers: { cookie },
+      })
+      assert.equal(response.status, 403)
+    }
+  }
+})
+
+test('public JSON endpoints reject large or malformed field values', async () => {
+  const large = await app.request('/api/requests', json({ message: 'x'.repeat(17_000) }))
+  assert.equal(large.status, 413)
+  const invalid = await app.request('/api/requests', json({ name: 123 }))
+  assert.equal(invalid.status, 400)
+  const login = await app.request('/api/session', json({ email: [] }))
+  assert.equal(login.status, 401)
+})

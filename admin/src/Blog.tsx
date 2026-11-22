@@ -10,7 +10,7 @@ export function Blog({ canEdit, onLocked }: { canEdit: boolean; onLocked: () => 
   const queryClient = useQueryClient()
   const [editing, setEditing] = useState<PostRow | null | undefined>(undefined)
   const posts = useQuery({
-    queryKey: ['posts'],
+    queryKey: ['posts', canEdit],
     queryFn: async (): Promise<PostRow[]> => {
       const res = await fetch('/api/posts', { credentials: 'include' })
       if (!res.ok) throw new Error('Failed to load posts')

@@ -42,7 +42,7 @@ export function Cabinet() {
   })
   const canEdit = session.data?.role === 'admin'
   const requests = useQuery({
-    queryKey: ['requests'],
+    queryKey: ['requests', session.data?.role],
     enabled: Boolean(session.data),
     queryFn: async (): Promise<RequestRow[]> => {
       const res = await fetch('/api/requests', { credentials: 'include' })
@@ -51,7 +51,7 @@ export function Cabinet() {
       }
       return res.json()
     },
-    refetchInterval: 4000,
+    refetchInterval: canEdit ? 4000 : false,
   })
 
   const rows = requests.data ?? []
@@ -88,7 +88,11 @@ export function Cabinet() {
   async function logout() {
     await fetch('/api/session', { method: 'DELETE', credentials: 'include' })
     setOpenId(null)
-    await queryClient.invalidateQueries({ queryKey: ['session'] })
+    setPendingDeleteId(null)
+    queryClient.setQueryData(['session'], null)
+    for (const key of ['requests', 'projects', 'posts']) {
+      queryClient.removeQueries({ queryKey: [key] })
+    }
   }
 
   if (session.isLoading) {

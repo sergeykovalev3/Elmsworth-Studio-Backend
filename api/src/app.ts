@@ -1,7 +1,9 @@
+import { isIP } from 'node:net'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { Hono } from 'hono'
 import type { Context, Next } from 'hono'
+import { bodyLimit } from 'hono/body-limit'
 import { cors } from 'hono/cors'
 import { checkAccount } from './accounts.ts'
 import { createPost, deletePost, listPosts, updatePost } from './db/posts.ts'
@@ -46,6 +48,53 @@ app.get('/api/uploads/:name', async (c) => {
   })
 })
 
+const loginAttempts = new Map<string, number>()
+let publicSubmissions = 0
+let rateWindow = 0
+
+function refreshRateWindow() {
+  const current = Math.floor(Date.now() / 60_000)
+  if (current === rateWindow) return
+  rateWindow = current
+  loginAttempts.clear()
+  publicSubmissions = 0
+}
+
+const limitJson = bodyLimit({
+  maxSize: 16_384,
+  onError: (c) => c.json({ error: 'request too large' }, 413),
+})
+
+app.use('/api/*', async (c, next) => {
+  if (c.req.method === 'GET' || c.req.method === 'HEAD' || c.req.method === 'OPTIONS') return next()
+  if (c.req.path === '/api/requests' && c.req.method === 'POST') return next()
+  const origin = c.req.header('origin')
+  const railwayOrigin = process.env.RAILWAY_PUBLIC_DOMAIN
+    ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+    : undefined
+  if (origin && origin !== new URL(c.req.url).origin && origin !== railwayOrigin &&
+      c.req.header('sec-fetch-site') !== 'same-origin') {
+    return c.json({ error: 'cross-origin cabinet action' }, 403)
+  }
+  return next()
+})
+
+app.use('/api/session', async (c, next) => {
+  c.header('Cache-Control', 'private, no-store')
+  if (c.req.method !== 'POST') return next()
+  refreshRateWindow()
+  const proxyIp = c.req.header('x-real-ip') ?? ''
+  const ip = isIP(proxyIp) ? proxyIp : 'unknown'
+  const key = loginAttempts.has(ip) || loginAttempts.size < 2048 ? ip : 'overflow'
+  const attempts = loginAttempts.get(key) ?? 0
+  if (attempts >= 20) {
+    c.header('Retry-After', '60')
+    return c.json({ error: 'too many login attempts' }, 429)
+  }
+  loginAttempts.set(key, attempts + 1)
+  await limitJson(c, next)
+})
+
 app.get('/api/session', (c) => {
   const session = readSession(c)
   if (!session) return c.json({ error: 'unauthorized' }, 401)
@@ -59,7 +108,10 @@ app.post('/api/session', async (c) => {
   } catch {
     return c.json({ error: 'invalid JSON' }, 400)
   }
-  const role = checkAccount(body.email ?? '', body.password ?? '')
+  if (typeof body?.email !== 'string' || typeof body.password !== 'string') {
+    return c.json({ error: 'invalid login' }, 401)
+  }
+  const role = checkAccount(body.email, body.password)
   if (!role || !body.email) return c.json({ error: 'invalid login' }, 401)
   startSession(c, { email: body.email.trim(), role })
   return c.json({ email: body.email.trim(), role })
@@ -91,7 +143,8 @@ app.use('/api/posts/*', guardRequests)
 
 app.get('/api/projects', async (c) => {
   const rows = await listProjects()
-  if (readSession(c)) return c.json(rows)
+  c.header('Cache-Control', 'private, no-store')
+  if (readSession(c)?.role === 'admin') return c.json(rows)
   return c.json(rows.filter((row) => row.published))
 })
 
@@ -220,7 +273,8 @@ async function readPostForm(c: Context) {
 
 app.get('/api/posts', async (c) => {
   const rows = await listPosts()
-  if (readSession(c)) return c.json(rows)
+  c.header('Cache-Control', 'private, no-store')
+  if (readSession(c)?.role === 'admin') return c.json(rows)
   return c.json(rows.filter((row) => row.published))
 })
 
@@ -262,7 +316,8 @@ app.get('/api/requests', async (c) => {
   return c.json(await listRequests(session.role === 'viewer'))
 })
 
-app.post('/api/requests', async (c) => {
+app.post('/api/requests', limitJson, async (c) => {
+  if (readSession(c)?.role === 'viewer') return c.json({ error: 'view only' }, 403)
   let body: {
     name?: string
     email?: string
@@ -274,9 +329,21 @@ app.post('/api/requests', async (c) => {
   } catch {
     return c.json({ error: 'invalid JSON' }, 400)
   }
-  if (!body.name?.trim() || !body.email?.trim() || !body.message?.trim()) {
+  if (typeof body?.name !== 'string' || typeof body.email !== 'string' ||
+      typeof body.message !== 'string' || (body.phone != null && typeof body.phone !== 'string') ||
+      !body.name.trim() || !body.email.trim() || !body.message.trim()) {
     return c.json({ error: 'name, email, and message are required' }, 400)
   }
+  if (body.name.length > 200 || body.email.length > 254 ||
+      body.message.length > 4000 || (body.phone?.length ?? 0) > 64) {
+    return c.json({ error: 'request fields are too long' }, 400)
+  }
+  refreshRateWindow()
+  if (publicSubmissions >= 30) {
+    c.header('Retry-After', '60')
+    return c.json({ error: 'too many submissions' }, 429)
+  }
+  publicSubmissions += 1
   const row = await createRequest({
     name: body.name,
     email: body.email,

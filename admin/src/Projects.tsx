@@ -10,7 +10,7 @@ export function Projects({ canEdit, onLocked }: { canEdit: boolean; onLocked: ()
   const queryClient = useQueryClient()
   const [editing, setEditing] = useState<ProjectRow | null | undefined>(undefined)
   const projects = useQuery({
-    queryKey: ['projects'],
+    queryKey: ['projects', canEdit],
     queryFn: async (): Promise<ProjectRow[]> => {
       const res = await fetch('/api/projects', { credentials: 'include' })
       if (!res.ok) throw new Error('Failed to load projects')
